@@ -97,22 +97,86 @@ namespace Webshop.Controllers
         }
 
         // 1.
-        [HttpGet("getOsystemByComputer")]
-        public object GetOsystemByComputer() 
+        [HttpGet("getOsystemAndComputer")]
+        public object GetOsystemAndComputer() 
         {
             var result = context.Osystems.Include(os => os.Computers).ToList();
-            return new { message = "Sikeres lekérdezés", result = "" };
+            if (result.Count > 0)
+            {   
+                return new { message = "Sikeres lekérdezés", result = "" };
+               
+            }
+            return StatusCode(404, new { message = "üres adatbázis", result = result });
+
         }
         // 2. Feladat
         [HttpGet("getAllComputerbyType")]
         public object GetAllComputerbyType()
         {
-            var result = context.Computers.Include(cmp => cmp.Type).ToList();
-            return new { message = "Sikeres lekérdezés", result = "" };
+            var result = context.Osystems.Include(os => os.Computers).ToList();
+            if (result.Count > 0)
+            {
+                return new { message = "Sikeres lekérdezés", result = "" };
+
+            }
+            return StatusCode(404, new { message = "üres adatbázis", result = result });
         }
 
         // 3. Feladat
-        
+        [HttpGet("~/api/query/os/{id:guid}")]
+        public object GetOsById(Guid id)
+        {
+            var result = context.Osystems.Include(os => os.Computers).FirstOrDefault(os => os.Id == id);
+
+            if (result == null)
+            {
+                return NotFound(new { message = "Nincs ilyen ope rendszer" });
+
+            }
+
+            return Ok(new{message = "Sikeres lekérdezés",result = result});
+        }
+
+        // 5.Feladat
+
+        [HttpGet("~/api/query/computer/{id:guid}")]
+        public object GetComputerWithOs(Guid id)
+        {
+            var os = context.Osystems.Include(os => os.Computers).FirstOrDefault(os => os.Computers.Any(c => c.Id == id));
+
+            if (os == null)
+            {
+                return NotFound(new { message = "Nincs ilyen számítógép" });
+
+            }
+
+            var computer = os.Computers.First(c => c.Id == id);
+
+            return Ok(new { message = "Sikeres lekérdezés",result = new
+            {
+                Computer = computer,
+                OsName = os.Name
+            }
+            });
+        }
+
+        // 6.Feladat
+        [HttpGet("~/api/query/os-computer-count")]
+        public object GetOsComputerCount()
+        {
+            var result = context.Osystems.Select(os => new
+                {
+                    OsName = os.Name,
+                    ComputerCount = os.Computers.Count()}).ToList();
+
+            return Ok(new{message = "Sikeres lekérdezés",result});
+        }
+
+        //7. Feladat
+
+
+
+
 
 
 
